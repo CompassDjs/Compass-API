@@ -1,0 +1,45 @@
+{
+  "name": "compass-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon --watch src -e js,ts,json --exec \"ts-node src/server.ts\"",
+    "build": "tsup src/server.ts --format cjs --clean",
+    "start": "node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CompassDjs/Compass-API.git"
+  },
+  "keywords": [],
+  "author": "Pexilo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CompassDjs/Compass-API/issues"
+  },
+  "dependencies": {
+    "@types/mongoose-unique-validator": "^1.0.6",
+    "bcrypt": "^5.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.9.0",
+    "mongoose-unique-validator": "^3.1.0",
+    "swagger-autogen": "^2.22.0",
+    "swagger-ui-express": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.16",
+    "@types/mongoose": "^5.11.97",
+    "@types/node": "^18.11.18",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.1.2",
+    "tsup": "^6.5.0",
+    "typescript": "^4.9.5"
+  }
+}
