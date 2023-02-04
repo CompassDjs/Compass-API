@@ -6,6 +6,6 @@ import UserController from "@controllers/user.controller";
 router.get("/i/:id", UserController.getUser);
 router.post("/add", UserController.createUser);
 router.put("/i/:id", UserController.updateUser);
-router.put("/i/voice/:id", UserController.updateUserVoiceTime);
+router.put("/i/voice/:guildId/:userId", UserController.updateUserVoiceTime);
 
 export default router;

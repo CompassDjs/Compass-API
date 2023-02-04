@@ -10,7 +10,7 @@ export function getUser(req: Request, res: Response) {
 }
 
 export function createUser(req: Request, res: Response) {
-  LogInfo(`Creating user '${req.body.username}'`);
+  LogInfo(`Creating user '${req.body.userId}'`);
   const user = new User({ ...req.body });
   user
     .save()
@@ -32,28 +32,28 @@ export function updateUser(req: Request, res: Response) {
 }
 
 export function updateUserVoiceTime(req: Request, res: Response) {
-  LogInfo(`Updating user '${req.params.id}' voice time`);
-  User.findOne({ userId: req.params.id })
+  LogInfo(`Updating user '${req.params.userId}' voice time`);
+  User.findOne({ userId: req.params.userId })
     .then((user) => {
-      if (!user) return res.status(404).json({ error: "User not found" });
-      console.log(req.body);
-      User.updateOne(
-        { userId: req.params.id },
-        { voiceTime: user.voiceTime + req.body.voiceTime }
-      )
+      if (!user) return;
+      const guilds = user.guildStats;
+      let guild = guilds.find((g) => g.guildId === req.params.guildId) ?? null;
+
+      if (!guild) {
+        guild = {
+          guildId: req.params.guildId,
+          voiceTime: req.body.voiceTime,
+        };
+        guilds.push(guild);
+      } else {
+        guild.voiceTime += req.body.voiceTime;
+      }
+
+      User.updateOne({ userId: req.params.userId }, { guildStats: guilds })
         .then(() => res.status(200).json({ message: "Voice time updated!" }))
         .catch((error) => res.status(400).json({ error }));
     })
-    .catch(() => {
-      console.log(req);
-      const user = new User({ ...req.body, userId: req.params.id });
-      user
-        .save()
-        .then(() =>
-          res.status(201).json({ message: "User did not exist, created!" })
-        )
-        .catch((error) => res.status(400).json({ error }));
-    });
+    .catch(() => res.status(404).json({ error: "User not found" }));
 }
 
 export default { getUser, createUser, updateUser, updateUserVoiceTime };
