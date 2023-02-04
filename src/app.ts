@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import userRoutes from "@routes/user.routes";
+import guildRoutes from "@routes/guild.routes";
 
 mongoose.set("strictQuery", false);
 mongoose
@@ -23,5 +24,6 @@ app.get("/api/ping", (_req, res) => {
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/guilds", guildRoutes);
 
 export default app;

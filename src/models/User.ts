@@ -5,7 +5,15 @@ const User = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   username: { type: String, required: false },
   imageUrl: { type: String, required: false },
-  voiceTime: { type: Number, default: 0 },
+  guildStats: [
+    {
+      type: Object,
+      default: {
+        guildId: { type: String, required: true, unique: true },
+        voiceTime: { type: Number, required: true, default: 0 },
+      },
+    },
+  ],
 });
 
 User.plugin(uniqueValidator);
