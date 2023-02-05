@@ -56,4 +56,54 @@ export function updateUserVoiceTime(req: Request, res: Response) {
     .catch(() => res.status(404).json({ error: "User not found" }));
 }
 
-export default { getUser, createUser, updateUser, updateUserVoiceTime };
+export function updateUserGameTime(req: Request, res: Response) {
+  LogInfo(`Updating user '${req.params.userId}' game time`);
+  User.findOne({ userId: req.params.userId })
+    .then((user) => {
+      if (!user) return;
+      const guilds = user.guildStats;
+      let guild = guilds.find((g) => g.guildId === req.params.guildId) ?? null;
+
+      if (!guild) {
+        guild = {
+          guildId: req.params.guildId,
+          gamesPlayed: [
+            {
+              gameName: req.body.gameName,
+              timePlayed: req.body.timePlayed,
+            },
+          ],
+        };
+        guilds.push(guild);
+      } else {
+        let game = guild.gamesPlayed.find(
+          (g: { gameName: string; timePlayed: number }) => {
+            return g.gameName === req.body.gameName;
+          }
+        );
+
+        if (!game) {
+          game = {
+            gameName: req.body.gameName,
+            timePlayed: req.body.timePlayed,
+          };
+          guild.gamesPlayed.push(game);
+        } else {
+          game.timePlayed += req.body.timePlayed;
+        }
+      }
+
+      User.updateOne({ userId: req.params.userId }, { guildStats: guilds })
+        .then(() => res.status(200).json({ message: "Game time updated!" }))
+        .catch((error) => res.status(400).json({ error }));
+    })
+    .catch(() => res.status(404).json({ error: "User not found" }));
+}
+
+export default {
+  getUser,
+  createUser,
+  updateUser,
+  updateUserVoiceTime,
+  updateUserGameTime,
+};

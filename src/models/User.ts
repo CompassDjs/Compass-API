@@ -11,6 +11,15 @@ const User = new mongoose.Schema({
       default: {
         guildId: { type: String, required: true, unique: true },
         voiceTime: { type: Number, required: true, default: 0 },
+        gamesPlayed: [
+          {
+            type: Object,
+            default: {
+              gameName: { type: String, required: true, unique: true },
+              timePlayed: { type: Number, required: true, default: 0 },
+            },
+          },
+        ],
       },
     },
   ],
