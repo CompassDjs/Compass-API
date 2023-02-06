@@ -1,10 +1,14 @@
 import express from "express";
 const router = express.Router();
 
-import GuildController from "@controllers/guild.controller";
+import {
+  getGuild,
+  createGuild,
+  deleteGuild,
+} from "@controllers/guild.controller";
 
-router.get("/i/:id", GuildController.getGuild);
-router.post("/add", GuildController.createGuild);
-router.delete("/i/:id", GuildController.deleteGuild);
+router.get("/i/:guildId", getGuild);
+router.post("/add", createGuild);
+router.delete("/i/:guildId", deleteGuild);
 
 export default router;

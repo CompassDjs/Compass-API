@@ -19,7 +19,8 @@
       "@controllers/*": ["src/controllers/*"],
       "@middlewares/*": ["src/middlewares/*"],
       "@models/*": ["src/models/*"],
-      "@routes/*": ["src/routes/*"]
+      "@routes/*": ["src/routes/*"],
+      "@interfaces/*": ["src/interfaces/*"]
     }
   },
   "ts-node": {

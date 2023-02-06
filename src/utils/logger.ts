@@ -9,6 +9,10 @@ function Logger(msg: string, type: string, emoji: string) {
   console.log(`${d}: ${emoji}  [${type}] ${msg}`);
 }
 
+export function LogGet(msg: string) {
+  Logger(msg, "GET", "🔍");
+}
+
 export function LogUpdate(msg: string) {
   Logger(msg, "UPDATE", "🔄");
 }
