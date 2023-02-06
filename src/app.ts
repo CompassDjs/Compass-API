@@ -1,17 +1,12 @@
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
+import db from "@utils/db";
+import swaggerUi from "swagger-ui-express";
+import swaggerFile from "@swaggerFile";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import userRoutes from "@routes/user.routes";
-import guildRoutes from "@routes/guild.routes";
-
-mongoose.set("strictQuery", false);
-mongoose
-  .connect(`${process.env.MONGO_URI}`)
-  .then(() => console.log("🍀 Connected to MongoDB"))
-  .catch((err) => console.log("❌ Failed to connect to MongoDB: " + err));
+db.sequelize.sync();
 
 const app = express();
 app.use(express.json());
@@ -23,7 +18,17 @@ app.get("/api/ping", (_req, res) => {
 });
 
 // Routes
+import userRoutes from "@routes/user.routes";
+import guildRoutes from "@routes/guild.routes";
+import channelRoutes from "@routes/channels.routes";
+import statsRoutes from "@routes/stats.routes";
+
 app.use("/api/users", userRoutes);
+app.use("/api/channels", channelRoutes);
 app.use("/api/guilds", guildRoutes);
+app.use("/api/stats", statsRoutes);
+
+// Swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 export default app;

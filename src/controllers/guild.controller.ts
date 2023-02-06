@@ -1,28 +1,27 @@
 import { Request, Response } from "express";
-import { LogInfo } from "@utils/logger";
-import Guild from "@models/Guild";
+import { LogCreate, LogDelete, LogGet } from "@utils/logger";
+import db from "@utils/db";
+import IGuild from "@interfaces/IGuild";
+
+const Guild = db.guilds;
 
 export function getGuild(req: Request, res: Response) {
-  LogInfo(`Getting guild '${req.params.id}'`);
-  Guild.findOne({ guildId: req.params.id })
-    .then((guild) => res.status(200).json(guild))
-    .catch((error) => res.status(404).json({ error }));
+  LogGet(`Getting guild '${req.params.guildId}'`);
+  Guild.findOne({ where: { guildId: req.params.guildId } })
+    .then((guild: IGuild) => res.status(200).json(guild))
+    .catch((error: Error) => res.status(404).json({ error }));
 }
 
 export function createGuild(req: Request, res: Response) {
-  LogInfo(`Creating guild '${req.body.name}'`);
-  const guild = new Guild({ ...req.body });
-  guild
-    .save()
+  LogCreate(`Creating guild '${req.body.guildId}'`);
+  Guild.create({ ...req.body })
     .then(() => res.status(201).json({ message: "Guild created!" }))
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error: Error) => res.status(400).json({ error: error.message }));
 }
 
 export function deleteGuild(req: Request, res: Response) {
-  LogInfo(`Deleting guild '${req.params.id}'`);
-  Guild.deleteOne({ guildId: req.params.id })
+  LogDelete(`Deleting guild '${req.params.guildId}'`);
+  Guild.destroy({ where: { guildId: req.params.guildId } })
     .then(() => res.status(200).json({ message: "Guild deleted!" }))
-    .catch((error) => res.status(400).json({ error }));
+    .catch(() => res.status(404).json({ error: "Guild not found" }));
 }
-
-export default { getGuild, createGuild, deleteGuild };
