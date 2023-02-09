@@ -14,10 +14,6 @@ export function Game(sequelize: Sequelize, Sequelize: any) {
       type: Sequelize.STRING(45),
       allowNull: true,
     },
-    igdbRealeaseDate: {
-      type: Sequelize.INTEGER(20),
-      allowNull: true,
-    },
   });
   return Game;
 }

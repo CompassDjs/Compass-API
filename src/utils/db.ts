@@ -16,11 +16,14 @@ const sequelize = new Sequelize(DB_NAME!, DB_USER!, DB_PASS!, {
   },
 });
 
-if (!sequelize.authenticate()) {
-  console.log("❌ Failed to connect to MySQL");
-} else {
-  console.log("🐬 Connected to MySQL");
-}
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("🐬 Connected to MySQL");
+  } catch (error) {
+    console.error("❌ Failed to connect to MySQL");
+  }
+})();
 
 const db: any = {};
 db.Sequelize = Sequelize;

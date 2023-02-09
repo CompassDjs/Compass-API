@@ -1,5 +1,6 @@
 import http from "http";
 import app from "./app";
+import db from "@utils/db";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -55,4 +56,11 @@ server.on("listening", () => {
   console.log("🌐 Listening on " + bind);
 });
 
-server.listen(process.env.API_PORT || 3000);
+(async () => {
+  try {
+    await db.sequelize.sync();
+    server.listen(process.env.API_PORT || 3000);
+  } catch (error) {
+    console.error(error);
+  }
+})();

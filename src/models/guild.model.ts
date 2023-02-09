@@ -7,7 +7,7 @@ export function Guild(sequelize: Sequelize, Sequelize: any) {
       allowNull: false,
     },
     guildCreatedAt: {
-      type: Sequelize.INTEGER(20),
+      type: Sequelize.DATE,
       allowNull: false,
     },
   });
