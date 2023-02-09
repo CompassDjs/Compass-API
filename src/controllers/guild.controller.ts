@@ -6,7 +6,7 @@ import IGuild from "@interfaces/IGuild";
 const Guild = db.guilds;
 
 export function getGuild(req: Request, res: Response) {
-  LogGet(`Getting guild '${req.params.guildId}'`);
+  LogGet(`Guild '${req.params.guildId}'`);
   Guild.findOne({ where: { guildId: req.params.guildId } })
     .then((guild: IGuild) => res.status(200).json(guild))
     .catch((error: Error) => res.status(404).json({ error }));
