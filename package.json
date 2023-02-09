@@ -2,11 +2,11 @@
   "name": "compass-api",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
     "dev": "nodemon --watch src -e js,ts,json --exec \"ts-node src/server.ts\"",
     "build": "tsup src/server.ts --format cjs --clean",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "swagger": "node src/utils/swagger.js"
   },
   "repository": {

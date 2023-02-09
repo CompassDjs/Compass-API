@@ -34,28 +34,25 @@ export function getUserStats(req: Request, res: Response) {
         limit: 3,
       })
         .then(async (top3Games: []) => {
-          const totalGameTime =
-            (await UsersGames.sum("gameTime", {
-              where: { userUserId: user.userId },
-            })) || 0;
+          const totalGameTime = await UsersGames.sum("gameTime", {
+            where: { userUserId: user.userId },
+          });
 
-          let guildTotalVoice =
-            (await db.sequelize.query(
-              `SELECT cast(SUM(uc.voiceTime) AS UNSIGNED) as voiceTime
+          const guildTotalVoice = await db.sequelize.query(
+            `SELECT cast(SUM(uc.voiceTime) AS UNSIGNED) as voiceTime
           FROM users_channels AS uc
           JOIN channels AS c ON uc.channelChannelId = c.channelId
           JOIN users_guilds AS ug ON uc.userUserId = ug.userUserId
           WHERE uc.userUserId = :userId AND c.guildGuildId = :guildId
           `,
-              {
-                replacements: {
-                  guildId: req.params.guildId,
-                  userId: req.params.userId,
-                },
-                type: QueryTypes.SELECT,
-              }
-            )) || 0;
-
+            {
+              replacements: {
+                guildId: req.params.guildId,
+                userId: req.params.userId,
+              },
+              type: QueryTypes.SELECT,
+            }
+          );
           const top3Voice = await db.sequelize.query(
             `SELECT 
           channels.channelId, 
@@ -127,8 +124,8 @@ export function getUserStats(req: Request, res: Response) {
                 top3Voice,
                 top3Games,
                 guildTotalMsg,
-                guildTotalVoice: guildTotalVoice[0].voiceTime,
-                totalGameTime,
+                guildTotalVoice: guildTotalVoice[0].voiceTime || 0,
+                totalGameTime: totalGameTime || 0,
               });
             })
             .catch((error: Error) => res.status(404).json({ error }));
