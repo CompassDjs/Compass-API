@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { LogUpdate, LogGet, LogCreate } from "@utils/logger";
+import { FindGameByName, GetGameCover } from "@utils/igdb";
+import { QueryTypes } from "sequelize";
 import db from "@utils/db";
 import IUser from "@interfaces/IUser";
 import IGuild from "@interfaces/IGuild";
@@ -7,7 +9,6 @@ import IChannel from "@interfaces/IChannel";
 import IUserChannel from "@interfaces/IUserChannel";
 import IGame from "@interfaces/IGame";
 import IUserGame from "@interfaces/IUserGame";
-import { QueryTypes } from "sequelize";
 
 const User = db.users;
 const Channel = db.channels;
@@ -241,8 +242,38 @@ export function updateUserGameTime(req: Request, res: Response) {
         where: { gameName: req.body.gameName },
         defaults: { gameName: req.body.gameName },
       })
-        .then((data: any) => {
+        .then(async (data: any) => {
           const game: IGame = data[0];
+
+          if (!game.igdbId) {
+            const igdbObj = {
+              igdbId: "",
+              igdbCoverId: "",
+            };
+
+            //ADD TOKEN REFRESH
+            try {
+              const igdbGame = await FindGameByName(game);
+              igdbObj.igdbId = igdbGame ? igdbGame.id : null;
+              const igdbCover = await GetGameCover(igdbObj.igdbId);
+              igdbObj.igdbCoverId = igdbCover ? igdbCover.image_id : null;
+            } catch (error) {
+              console.log(error);
+              throw new Error();
+            }
+            Game.update(
+              { ...igdbObj },
+              {
+                where: {
+                  gameName: game.gameName,
+                },
+              }
+            )
+              .then(() => {})
+              .catch((error: Error) => {
+                res.status(400).json({ error: error.message });
+              });
+          }
           UsersGames.findOrCreate({
             where: {
               gameGameName: game.gameName,
@@ -296,7 +327,7 @@ export function newMessage(req: Request, res: Response) {
         where: { guildId: req.body.guildId },
         defaults: {
           guildId: req.body.guildId,
-          guildCreatedAt: req.body.createdAt,
+          guildCreatedAt: req.body.guildCreatedAt,
         },
       })
         .then((data: any) => {
@@ -357,4 +388,11 @@ export function newMessage(req: Request, res: Response) {
         );
     })
     .catch((error: Error) => res.status(400).json({ error: error.message }));
+}
+function FindGameCover(igdbObj: {
+  igdbId: string;
+  igdbCoverId: string;
+  igdbRealeaseDate: number;
+}) {
+  throw new Error("Function not implemented.");
 }

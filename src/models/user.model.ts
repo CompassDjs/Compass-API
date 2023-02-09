@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+
 export function User(sequelize: Sequelize, Sequelize: any) {
   const User = sequelize.define("users", {
     userId: {
