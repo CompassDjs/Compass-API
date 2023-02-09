@@ -1,12 +1,9 @@
 import express from "express";
 import cors from "cors";
-import db from "@utils/db";
 import swaggerUi from "swagger-ui-express";
 import swaggerFile from "@swaggerFile";
 import * as dotenv from "dotenv";
 dotenv.config();
-
-db.sequelize.sync();
 
 const app = express();
 app.use(express.json());
