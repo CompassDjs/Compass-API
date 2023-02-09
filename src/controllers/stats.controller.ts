@@ -251,6 +251,7 @@ export function updateUserGameTime(req: Request, res: Response) {
             //ADD TOKEN REFRESH
             try {
               const igdbGame = await FindGameByName(game);
+              if (!igdbGame) return;
               igdbObj.igdbId = igdbGame ? igdbGame.id : null;
               const igdbCover = await GetGameCover(igdbObj.igdbId);
               igdbObj.igdbCoverId = igdbCover ? igdbCover.image_id : null;
