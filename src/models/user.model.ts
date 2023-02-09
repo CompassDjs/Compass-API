@@ -6,11 +6,6 @@ export function User(sequelize: Sequelize, Sequelize: any) {
       primaryKey: true,
       allowNull: false,
     },
-    msgSent: {
-      type: Sequelize.INTEGER(45),
-      allowNull: false,
-      defaultValue: 0,
-    },
   });
   return User;
 }

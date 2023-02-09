@@ -6,13 +6,9 @@ export function Guild(sequelize: Sequelize, Sequelize: any) {
       primaryKey: true,
       allowNull: false,
     },
-    createdAt: {
+    guildCreatedAt: {
       type: Sequelize.INTEGER(20),
       allowNull: false,
-    },
-    supportedSince: {
-      type: Sequelize.INTEGER(20),
-      allowNull: true,
     },
   });
   return Guild;
