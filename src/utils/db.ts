@@ -38,6 +38,7 @@ import { UsersGuilds } from "@models/users_guilds.model";
 import { UsersGames } from "@models/users_games.model";
 import { UsersChannels } from "@models/users_channels.model";
 import { UsersMessages } from "@models/users_messages";
+import { Session } from "@models/session.model";
 
 db.users = User(sequelize, Sequelize);
 db.guilds = Guild(sequelize, Sequelize);
@@ -48,6 +49,7 @@ db.users_guilds = UsersGuilds(sequelize, Sequelize);
 db.users_games = UsersGames(sequelize, Sequelize);
 db.users_channels = UsersChannels(sequelize, Sequelize);
 db.users_messages = UsersMessages(sequelize, Sequelize);
+db.sessions = Session(sequelize, Sequelize);
 
 db.users.belongsToMany(db.guilds, {
   through: db.users_guilds,
