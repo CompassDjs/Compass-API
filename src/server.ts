@@ -1,6 +1,9 @@
+import passport from "passport";
 import http from "http";
 import app from "./app";
 import db from "@utils/db";
+import { DiscordAPI } from "@utils/discord";
+import session from "express-session";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -56,11 +59,42 @@ server.on("listening", () => {
   console.log("🌐 Listening on " + bind);
 });
 
+const SequelizeStore = require("connect-session-sequelize")(session.Store);
+
+function extendDefaultFields(defaults: any, session: any) {
+  return {
+    data: defaults.data,
+    expires: defaults.expires,
+    userId: session.passport.user.id,
+  };
+}
+
+const store = new SequelizeStore({
+  db: db.sequelize,
+  table: "sessions",
+  extendDefaultFields: extendDefaultFields,
+  checkExpirationInterval: 15 * 60 * 1000,
+  expiration: 24 * 60 * 60 * 1000,
+});
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
+);
+store.sync();
+
 (async () => {
   try {
     await db.sequelize.sync();
+    DiscordAPI(app, passport);
     server.listen(process.env.API_PORT || 3000);
   } catch (error) {
     console.error(error);
   }
 })();
+
+export default server;
