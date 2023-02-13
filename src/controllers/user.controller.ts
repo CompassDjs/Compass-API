@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { LogCreate, LogDelete, LogUpdate, LogGet } from "@utils/logger";
 import db from "@utils/db";
 import IUser from "@interfaces/IUser";
+import FindBadges from "@utils/badges";
 
 const User = db.users;
 
@@ -39,4 +40,22 @@ export function deleteUser(req: Request, res: Response) {
   User.destroy({ where: { userId: req.params.userId } })
     .then(() => res.status(200).json({ message: "User deleted!" }))
     .catch(() => res.status(404).json({ error: "User not found" }));
+}
+
+export function initUser(user: IUser, flags: number) {
+  LogUpdate(`User '${user.userId}'`);
+  User.findOrCreate({
+    where: { userId: user.userId },
+    defaults: {
+      userId: user.userId,
+    },
+  })
+    .then((data: any) => {
+      user.badges = FindBadges(flags);
+
+      User.update({ ...user }, { where: { userId: user.userId } })
+        .then(() => {})
+        .catch((error: Error) => console.log(error.message));
+    })
+    .catch((error: Error) => console.log(error.message));
 }
