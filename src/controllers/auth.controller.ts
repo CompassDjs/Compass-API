@@ -18,16 +18,19 @@ export function AuthStatus(req: Request, res: Response) {
           userId: data?.userId,
         },
       })
-        .then((data: any) => {
-          const user: IUser = data[0];
-          res.status(200).json({ message: "logged in", user: user });
+        .then((userData: any) => {
+          const user: IUser = userData[0];
+
+          res.status(200).json({ user });
         })
         .catch((error: Error) => {
           res.status(404).json({ error: error.message });
         });
     })
     .catch((error: Error) => {
-      res.status(404).json({ message: "not logged in" });
+      res
+        .status(404)
+        .json({ message: "not logged in\n", error: error.message });
     });
 }
 

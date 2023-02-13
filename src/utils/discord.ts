@@ -1,5 +1,8 @@
 import { Express, NextFunction, Request, Response } from "express";
 import { PassportStatic } from "passport";
+import IUser from "@interfaces/IUser";
+import { initUser } from "@controllers/user.controller";
+
 const Strategy = require("passport-discord").Strategy;
 
 export function DiscordAPI(app: Express, passport: PassportStatic) {
@@ -28,8 +31,40 @@ export function DiscordAPI(app: Express, passport: PassportStatic) {
         scope: scopes,
         prompt: prompt,
       },
-      function (accessToken: any, refreshToken: any, profile: any, done: any) {
+      function (
+        accessToken: string,
+        refreshToken: string,
+        profile: any,
+        done: any
+      ) {
         process.nextTick(function () {
+          const tokens = {
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          };
+          const profileData = {
+            userId: profile.id,
+            username: profile.username,
+            avatarUrl:
+              "https://cdn.discordapp.com/avatars/" +
+              profile.id +
+              "/" +
+              profile.avatar +
+              ".png",
+            bannerUrl:
+              "https://cdn.discordapp.com/banners/" +
+              profile.id +
+              "/" +
+              profile.banner +
+              ".png",
+            nitro: profile.premium_type,
+            locale: profile.locale,
+          };
+
+          initUser(
+            { ...tokens, ...profileData } as IUser,
+            profile.public_flags
+          );
           return done(null, profile);
         });
       }

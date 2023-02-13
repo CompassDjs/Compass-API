@@ -10,6 +10,14 @@ export function Guild(sequelize: Sequelize, Sequelize: any) {
       type: Sequelize.DATE,
       allowNull: false,
     },
+    guildName: {
+      type: Sequelize.STRING(100),
+      allowNull: true,
+    },
+    iconUrl: {
+      type: Sequelize.STRING(100),
+      allowNull: true,
+    },
   });
   return Guild;
 }
