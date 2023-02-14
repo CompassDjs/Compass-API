@@ -1,5 +1,4 @@
-import { Response } from "express";
-import { NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { decrypt } from "@utils/crypto";
 import IUser from "@interfaces/IUser";
 import ISession from "@interfaces/ISession";
