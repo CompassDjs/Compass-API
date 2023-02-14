@@ -156,11 +156,11 @@ export function updateUserVoiceTime(req: Request, res: Response) {
           const guild: IGuild = data[0];
           UsersGuilds.findOrCreate({
             where: {
-              guildGuildId: guild.guildId,
+              guildGuildId: guild.id,
               userUserId: user.userId,
             },
             defaults: {
-              guildGuildId: guild.guildId,
+              guildGuildId: guild.id,
               userUserId: user.userId,
             },
           })
@@ -170,7 +170,7 @@ export function updateUserVoiceTime(req: Request, res: Response) {
                   channelId: req.body.channelId,
                 },
                 defaults: {
-                  guildGuildId: guild.guildId,
+                  guildGuildId: guild.id,
                   channelId: req.body.channelId,
                   type: req.body.type,
                 },
@@ -248,7 +248,7 @@ export function updateUserGameTime(req: Request, res: Response) {
               igdbCoverId: "",
             };
 
-            //ADD TOKEN REFRESH
+            // TODO: Update token
             try {
               const igdbGame = await FindGameByName(game);
               if (!igdbGame) return;
@@ -332,11 +332,11 @@ export function newMessage(req: Request, res: Response) {
           const guild: IGuild = data[0];
           UsersGuilds.findOrCreate({
             where: {
-              guildGuildId: guild.guildId,
+              guildGuildId: guild.id,
               userUserId: user.userId,
             },
             defaults: {
-              guildGuildId: guild.guildId,
+              guildGuildId: guild.id,
               userUserId: user.userId,
             },
           })
@@ -346,7 +346,7 @@ export function newMessage(req: Request, res: Response) {
                   channelId: req.body.channelId,
                 },
                 defaults: {
-                  guildGuildId: guild.guildId,
+                  guildGuildId: guild.id,
                   channelId: req.body.channelId,
                   type: req.body.type,
                 },
@@ -386,11 +386,4 @@ export function newMessage(req: Request, res: Response) {
         );
     })
     .catch((error: Error) => res.status(400).json({ error: error.message }));
-}
-function FindGameCover(igdbObj: {
-  igdbId: string;
-  igdbCoverId: string;
-  igdbRealeaseDate: number;
-}) {
-  throw new Error("Function not implemented.");
 }

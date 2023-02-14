@@ -1,7 +1,8 @@
 import { Express, NextFunction, Request, Response } from "express";
 import { PassportStatic } from "passport";
-import IUser from "@interfaces/IUser";
 import { initUser } from "@controllers/user.controller";
+import IUser from "@interfaces/IUser";
+import { encrypt } from "./crypto";
 
 const Strategy = require("passport-discord").Strategy;
 
@@ -19,7 +20,7 @@ export function DiscordAPI(app: Express, passport: PassportStatic) {
     done(null, obj);
   });
 
-  const scopes = ["identify", "guilds"];
+  const scopes = ["identify", "guilds", "guilds.members.read"];
   const prompt = "consent";
 
   passport.use(
@@ -39,8 +40,8 @@ export function DiscordAPI(app: Express, passport: PassportStatic) {
       ) {
         process.nextTick(function () {
           const tokens = {
-            accessToken: accessToken,
-            refreshToken: refreshToken,
+            accessToken: encrypt(accessToken),
+            refreshToken: encrypt(refreshToken),
           };
           const profileData = {
             userId: profile.id,
