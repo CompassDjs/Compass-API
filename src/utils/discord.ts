@@ -2,7 +2,6 @@ import { Express, NextFunction, Request, Response } from "express";
 import { PassportStatic } from "passport";
 import { initUser } from "@controllers/user.controller";
 import IUser from "@interfaces/IUser";
-import { encrypt } from "./crypto";
 
 const Strategy = require("passport-discord").Strategy;
 
@@ -40,8 +39,8 @@ export function DiscordAPI(app: Express, passport: PassportStatic) {
       ) {
         process.nextTick(function () {
           const tokens = {
-            accessToken: encrypt(accessToken),
-            refreshToken: encrypt(refreshToken),
+            accessToken: accessToken,
+            refreshToken: refreshToken,
           };
           const profileData = {
             userId: profile.id,

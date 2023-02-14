@@ -1,5 +1,4 @@
 import { Response, NextFunction } from "express";
-import { decrypt } from "@utils/crypto";
 import IUser from "@interfaces/IUser";
 import ISession from "@interfaces/ISession";
 import db from "@utils/db";
@@ -19,7 +18,7 @@ export default (req: any, res: Response, next: NextFunction) => {
         .then((userData: any) => {
           const user: IUser = userData.get({ plain: true });
           req.tokens = {
-            accessToken: user.accessToken ? decrypt(user.accessToken) : null,
+            accessToken: user.accessToken ? user.accessToken : null,
           };
           next();
         })
