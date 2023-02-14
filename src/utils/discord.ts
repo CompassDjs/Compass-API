@@ -1,7 +1,7 @@
 import { Express, NextFunction, Request, Response } from "express";
 import { PassportStatic } from "passport";
-import IUser from "@interfaces/IUser";
 import { initUser } from "@controllers/user.controller";
+import IUser from "@interfaces/IUser";
 
 const Strategy = require("passport-discord").Strategy;
 
@@ -19,7 +19,7 @@ export function DiscordAPI(app: Express, passport: PassportStatic) {
     done(null, obj);
   });
 
-  const scopes = ["identify", "guilds"];
+  const scopes = ["identify", "guilds", "guilds.members.read"];
   const prompt = "consent";
 
   passport.use(

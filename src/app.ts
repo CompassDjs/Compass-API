@@ -22,12 +22,14 @@ import guildRoutes from "@routes/guild.routes";
 import channelRoutes from "@routes/channels.routes";
 import statsRoutes from "@routes/stats.routes";
 import authRoutes from "@routes/auth.routes";
+import discordRoutes from "@routes/discord.routes";
 
 app.use("/api/users", userRoutes);
 app.use("/api/channels", channelRoutes);
 app.use("/api/guilds", guildRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/discord", discordRoutes);
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));

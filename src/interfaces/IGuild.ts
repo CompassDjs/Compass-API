@@ -1,4 +1,9 @@
 export default interface IGuild {
-  guildId: string;
-  guildCreatedAt: number;
+  id: string;
+  guildCreatedAt: Date;
+  name?: string;
+  icon?: string | null;
+  owner?: boolean;
+  permissions?: number;
+  createdAt?: Date;
 }

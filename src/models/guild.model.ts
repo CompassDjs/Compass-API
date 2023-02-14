@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
 export function Guild(sequelize: Sequelize, Sequelize: any) {
   const Guild = sequelize.define("guilds", {
-    guildId: {
+    id: {
       type: Sequelize.STRING(45),
       primaryKey: true,
       allowNull: false,
@@ -10,11 +10,11 @@ export function Guild(sequelize: Sequelize, Sequelize: any) {
       type: Sequelize.DATE,
       allowNull: false,
     },
-    guildName: {
+    name: {
       type: Sequelize.STRING(100),
       allowNull: true,
     },
-    iconUrl: {
+    icon: {
       type: Sequelize.STRING(100),
       allowNull: true,
     },
