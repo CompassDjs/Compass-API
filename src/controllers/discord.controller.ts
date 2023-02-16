@@ -11,31 +11,37 @@ const Guild = db.guilds;
 export function getMutualGuilds(req: any, res: Response) {
   const accessToken = req.tokens.accessToken;
   if (accessToken) {
-    getUserGuilds(accessToken).then((userGuilds) => {
-      getBotGuilds().then(async (botGuilds) => {
-        // TODO: Handle permissions
-        const mutualGuilds = botGuilds.data.filter((botGuild: IGuild) =>
-          userGuilds.data.some(
-            (userGuild: IGuild) => userGuild.id === botGuild.id
-          )
-        );
+    getUserGuilds(accessToken)
+      .then((userGuilds) => {
+        getBotGuilds()
+          .then(async (botGuilds) => {
+            // TODO: Handle permissions
+            const mutualGuilds = userGuilds.data.filter((userGuild: IGuild) =>
+              botGuilds.data.some(
+                (botGuild: IGuild) => userGuild.id === botGuild.id
+              )
+            );
 
-        let fullGuilds: IGuild[] = [];
-        mutualGuilds.map(async (guild: IGuild) => {
-          let guildDb = await getGuild(guild.id);
-          fullGuilds.push({
-            ...guild,
-            icon: guild.icon
-              ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
-              : null,
-            guildCreatedAt: guildDb.guildCreatedAt,
-            createdAt: guildDb.createdAt,
-          });
-        });
-        await Wait(1000);
-        res.status(200).json(fullGuilds);
-      });
-    });
+            let fullGuilds: IGuild[] = [];
+            mutualGuilds.map(async (guild: IGuild) => {
+              let guildDb = await getGuild(guild.id);
+              fullGuilds.push({
+                ...guild,
+                icon: guild.icon
+                  ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
+                  : null,
+                guildCreatedAt: guildDb.guildCreatedAt,
+                createdAt: guildDb.createdAt,
+              });
+            });
+            await Wait(1000);
+            res.status(200).json(fullGuilds);
+          })
+          .catch((error: Error) =>
+            res.status(404).json({ error: error.message })
+          );
+      })
+      .catch((error: Error) => res.status(404).json({ error: error.message }));
   } else {
     res.status(401).json({ error: "Unauthorized" });
   }

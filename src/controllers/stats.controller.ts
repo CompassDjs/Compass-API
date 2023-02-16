@@ -24,115 +24,167 @@ export function getUserStats(req: Request, res: Response) {
   LogGet(`Stats for user '${req.params.userId}'`);
   User.findOne({
     where: { userId: req.params.userId },
-  })
-    .then((user: IUser) => {
-      if (!user) return res.status(404).send({ message: "User not found" });
-      UsersGames.findAll({
-        attributes: ["gameGameName", "gameTime"],
-        where: { userUserId: user.userId },
-        sort: [["gameTime", "DESC"]],
-        limit: 3,
-      })
-        .then(async (top3Games: []) => {
-          const totalGameTime = await UsersGames.sum("gameTime", {
-            where: { userUserId: user.userId },
-          });
-
-          const guildTotalVoice = await db.sequelize.query(
-            `SELECT cast(SUM(uc.voiceTime) AS UNSIGNED) as voiceTime
-          FROM users_channels AS uc
-          JOIN channels AS c ON uc.channelChannelId = c.channelId
-          JOIN users_guilds AS ug ON uc.userUserId = ug.userUserId
-          WHERE uc.userUserId = :userId AND c.guildGuildId = :guildId
-          `,
-            {
-              replacements: {
-                guildId: req.params.guildId,
-                userId: req.params.userId,
-              },
-              type: QueryTypes.SELECT,
-            }
-          );
-          const top3Voice = await db.sequelize.query(
-            `SELECT 
-          channels.channelId, 
-          users_channels.voiceTime as voiceTime
-          FROM channels
-          JOIN users_channels ON channels.channelId = users_channels.channelChannelId
-          JOIN users_guilds ON users_channels.userUserId = users_guilds.userUserId
-          WHERE 
-          channels.guildGuildId = :guildId AND 
-          users_guilds.guildGuildId = :guildId AND 
-          users_channels.userUserId = :userId
-          GROUP BY channels.channelId
-          ORDER BY voiceTime DESC
-          LIMIT 3;`,
-            {
-              replacements: {
-                userId: user.userId,
-                guildId: req.params.guildId,
-              },
-              type: QueryTypes.SELECT,
-            }
-          );
-
-          const top3Msg = await db.sequelize.query(
-            `SELECT channels.channelId, count(*) as messageCount
-           FROM channels
-           JOIN messages ON channels.channelId = messages.channelChannelId
-           JOIN users_messages ON messages.messageId = users_messages.messageMessageId
-           WHERE channels.guildGuildId = :guildId AND users_messages.userUserId = :userId
-           GROUP BY channels.channelId
-           ORDER BY messageCount DESC
-           LIMIT 3;`,
-            {
-              replacements: {
-                userId: user.userId,
-                guildId: req.params.guildId,
-              },
-              type: QueryTypes.SELECT,
-            }
-          );
-          Message.count({
-            include: [
-              {
-                model: Channel,
-                required: true,
-                where: {
-                  guildGuildId: req.params.guildId,
-                },
-                include: [
-                  {
-                    model: Guild,
-                    required: true,
-                  },
-                ],
-              },
-              {
-                model: User,
-                required: true,
-                where: {
-                  userId: req.params.userId,
-                },
-              },
-            ],
-          })
-            .then((guildTotalMsg: number) => {
-              res.status(200).json({
-                user: user.userId,
-                top3Msg,
-                top3Voice,
-                top3Games,
-                guildTotalMsg,
-                guildTotalVoice: guildTotalVoice[0].voiceTime || 0,
-                totalGameTime: totalGameTime || 0,
-              });
-            })
-            .catch((error: Error) => res.status(404).json({ error }));
-        })
-        .catch((error: Error) => res.status(404).json({ error }));
+  }).then((data: any) => {
+    const user = data.dataValues as IUser;
+    Guild.findOne({
+      where: { id: req.params.guildId },
     })
-    .catch((error: Error) => res.status(404).json({ error }));
+      .then(async (data: any) => {
+        const guild = data.dataValues as IGuild;
+      })
+      .catch((error: Error) => res.status(404).json({ error }));
+  });
+}
+
+export function getGuildStats(req: Request, res: Response) {
+  LogGet(`Stats for guild '${req.params.guildId}'`);
+  Guild.findOne({
+    where: { id: req.params.guildId },
+  }).then(async (data: any) => {
+    const guild = data.dataValues as IGuild;
+    const totalMsg = await db.sequelize
+      .query(
+        `SELECT COUNT(*) AS totalMessages
+      FROM messages m
+      INNER JOIN channels c ON m.channelChannelId = c.channelId
+      INNER JOIN guilds g ON c.guildId = g.id
+      WHERE g.id = :guildId;`,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const totalVoice = await db.sequelize
+      .query(
+        `SELECT cast(SUM(uc.voiceTime) AS UNSIGNED) AS totalVoiceTime
+      FROM users_channels uc
+      INNER JOIN channels c ON uc.channelChannelId = c.channelId
+      INNER JOIN guilds g ON c.guildId = g.id
+      WHERE g.id = :guildId;`,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const totalGames = await db.sequelize
+      .query(
+        `SELECT cast(SUM(ug2.gameTime) AS UNSIGNED) AS totalGameTime
+      FROM users_guilds ug
+      INNER JOIN guilds g ON ug.guildId = g.id
+      INNER JOIN users u ON ug.userUserId = u.userId
+      INNER JOIN users_games ug2 ON u.userId = ug2.userUserId
+      WHERE g.id = :guildId;`,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const totals = {
+      totalMsg: totalMsg[0][0].totalMessages,
+      totalVoice: totalVoice[0][0].totalVoiceTime,
+      totalGames: totalGames[0][0].totalGameTime,
+    };
+
+    const topPlayers = await db.sequelize
+      .query(
+        `SELECT u.userId, cast(SUM(ug.gameTime) AS UNSIGNED) AS totalGameTime
+      FROM users u
+      INNER JOIN users_games ug ON u.userId = ug.userUserId
+      INNER JOIN users_guilds uguilds ON u.userId = uguilds.userUserId
+      WHERE uguilds.guildId = :guildId
+      GROUP BY u.userId
+      ORDER BY totalGameTime DESC
+      LIMIT 10;
+      `,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const topSpeakers = await db.sequelize
+      .query(
+        `SELECT u.userId, cast(SUM(uc.voiceTime) AS UNSIGNED) AS totalVoiceTime
+      FROM users u
+      INNER JOIN users_channels uc ON u.userId = uc.userUserId
+      INNER JOIN users_guilds uguilds ON u.userId = uguilds.userUserId
+      WHERE uc.channelChannelId IN (
+        SELECT channelId FROM channels WHERE guildId = :guildId
+      )
+      AND uguilds.guildId = :guildId
+      GROUP BY u.userId
+      ORDER BY totalVoiceTime DESC
+      LIMIT 10;`,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const topMessagers = await db.sequelize
+      .query(
+        `SELECT u.userId, COUNT(*) AS messageCount
+      FROM users u
+      JOIN users_messages um ON u.userId = um.userUserId
+      JOIN messages m ON m.messageId = um.messageMessageId
+      JOIN channels c ON c.channelId = m.channelChannelId
+      JOIN guilds g ON g.id = c.guildId
+      WHERE g.id = :guildId
+      GROUP BY u.userId
+      ORDER BY messageCount DESC
+      LIMIT 10;`,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const topChannels = await db.sequelize
+      .query(
+        `SELECT c.channelId AS channelId, COUNT(*) AS messageCount
+      FROM messages m
+      JOIN channels c ON m.channelChannelId = c.channelId
+      WHERE c.guildId = :guildId
+      GROUP BY m.channelChannelId
+      ORDER BY messageCount DESC
+      LIMIT 3;
+      `,
+        {
+          replacements: {
+            guildId: guild.id,
+          },
+        }
+      )
+      .catch((error: Error) => res.status(404).json({ error }));
+
+    const tops = {
+      topPlayers: topPlayers[0],
+      topSpeakers: topSpeakers[0],
+      topMessagers: topMessagers[0],
+      topChannels: topChannels[0],
+    };
+
+    res.status(200).json({
+      id: guild.id,
+      totals,
+      tops,
+    });
+  });
 }
 
 export function updateUserVoiceTime(req: Request, res: Response) {
@@ -146,9 +198,9 @@ export function updateUserVoiceTime(req: Request, res: Response) {
     .then((data: any) => {
       const user: IUser = data[0];
       Guild.findOrCreate({
-        where: { guildId: req.body.guildId },
+        where: { id: req.body.guildId },
         defaults: {
-          guildId: req.body.guildId,
+          id: req.body.guildId,
           guildCreatedAt: req.body.guildCreatedAt,
         },
       })
@@ -156,11 +208,11 @@ export function updateUserVoiceTime(req: Request, res: Response) {
           const guild: IGuild = data[0];
           UsersGuilds.findOrCreate({
             where: {
-              guildGuildId: guild.id,
+              guildId: guild.id,
               userUserId: user.userId,
             },
             defaults: {
-              guildGuildId: guild.id,
+              guildId: guild.id,
               userUserId: user.userId,
             },
           })
@@ -170,7 +222,7 @@ export function updateUserVoiceTime(req: Request, res: Response) {
                   channelId: req.body.channelId,
                 },
                 defaults: {
-                  guildGuildId: guild.id,
+                  guildId: guild.id,
                   channelId: req.body.channelId,
                   type: req.body.type,
                 },
@@ -241,37 +293,6 @@ export function updateUserGameTime(req: Request, res: Response) {
       })
         .then(async (data: any) => {
           const game: IGame = data[0];
-
-          if (!game.igdbId) {
-            const igdbObj = {
-              igdbId: "",
-              igdbCoverId: "",
-            };
-
-            // TODO: Update token
-            try {
-              const igdbGame = await FindGameByName(game);
-              if (!igdbGame) return;
-              igdbObj.igdbId = igdbGame ? igdbGame.id : null;
-              const igdbCover = await GetGameCover(igdbObj.igdbId);
-              igdbObj.igdbCoverId = igdbCover ? igdbCover.image_id : null;
-            } catch (error) {
-              console.log(error);
-              throw new Error();
-            }
-            Game.update(
-              { ...igdbObj },
-              {
-                where: {
-                  gameName: game.gameName,
-                },
-              }
-            )
-              .then(() => {})
-              .catch((error: Error) => {
-                res.status(400).json({ error: error.message });
-              });
-          }
           UsersGames.findOrCreate({
             where: {
               gameGameName: game.gameName,
@@ -299,18 +320,14 @@ export function updateUserGameTime(req: Request, res: Response) {
                   res.status(200).json({ message: "Game time updated!" })
                 )
                 .catch((error: Error) =>
-                  res.status(400).json({ error: error.message })
+                  res.status(400).json({ error: error })
                 );
             })
-            .catch((error: Error) =>
-              res.status(400).json({ error: error.message })
-            );
+            .catch((error: Error) => res.status(400).json({ error: error }));
         })
-        .catch((error: Error) =>
-          res.status(400).json({ error: error.message })
-        );
+        .catch((error: Error) => res.status(400).json({ error: error }));
     })
-    .catch((error: Error) => res.status(400).json({ error: error.message }));
+    .catch((error: Error) => res.status(400).json({ error: error }));
 }
 
 export function newMessage(req: Request, res: Response) {
@@ -322,9 +339,9 @@ export function newMessage(req: Request, res: Response) {
     .then((data: any) => {
       const user: IUser = data[0];
       Guild.findOrCreate({
-        where: { guildId: req.body.guildId },
+        where: { id: req.body.guildId },
         defaults: {
-          guildId: req.body.guildId,
+          id: req.body.guildId,
           guildCreatedAt: req.body.guildCreatedAt,
         },
       })
@@ -332,11 +349,11 @@ export function newMessage(req: Request, res: Response) {
           const guild: IGuild = data[0];
           UsersGuilds.findOrCreate({
             where: {
-              guildGuildId: guild.id,
+              guildId: guild.id,
               userUserId: user.userId,
             },
             defaults: {
-              guildGuildId: guild.id,
+              guildId: guild.id,
               userUserId: user.userId,
             },
           })
@@ -346,7 +363,7 @@ export function newMessage(req: Request, res: Response) {
                   channelId: req.body.channelId,
                 },
                 defaults: {
-                  guildGuildId: guild.id,
+                  guildId: guild.id,
                   channelId: req.body.channelId,
                   type: req.body.type,
                 },
