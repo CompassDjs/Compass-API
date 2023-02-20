@@ -1,16 +1,18 @@
 import express from "express";
 const router = express.Router();
 
+import accessToken from "@middlewares/accessToken";
+
 import {
-  getUserStats,
+  getGuildUserStats,
   getGuildStats,
   updateUserVoiceTime,
   updateUserGameTime,
   newMessage,
 } from "@controllers/stats.controller";
 
-router.get("/user/:guildId/:userId", getUserStats);
-router.get("/guild/:guildId", getGuildStats);
+router.get("/user/:guildId", accessToken, getGuildUserStats);
+router.get("/guild/:guildId", accessToken, getGuildStats);
 router.put("/voice", updateUserVoiceTime);
 router.put("/game", updateUserGameTime);
 router.post("/message", newMessage);
