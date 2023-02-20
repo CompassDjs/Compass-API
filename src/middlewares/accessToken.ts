@@ -19,6 +19,7 @@ export default (req: any, res: Response, next: NextFunction) => {
           const user: IUser = userData.get({ plain: true });
           req.tokens = {
             accessToken: user.accessToken ? user.accessToken : null,
+            userId: user.userId,
           };
           next();
         })
