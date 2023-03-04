@@ -131,3 +131,5 @@ dist
 src/documents/*
 src/images/*
 .vscode/settings.json
+
+security/
