@@ -45,18 +45,20 @@ export function DiscordAPI(app: Express, passport: PassportStatic) {
           const profileData = {
             userId: profile.id,
             username: profile.username,
-            avatarUrl:
-              "https://cdn.discordapp.com/avatars/" +
-              profile.id +
-              "/" +
-              profile.avatar +
-              ".png",
-            bannerUrl:
-              "https://cdn.discordapp.com/banners/" +
-              profile.id +
-              "/" +
-              profile.banner +
-              ".png",
+            avatarUrl: profile.avatar
+              ? "https://cdn.discordapp.com/avatars/" +
+                profile.id +
+                "/" +
+                profile.avatar +
+                ".png"
+              : null,
+            bannerUrl: profile.banner
+              ? "https://cdn.discordapp.com/banners/" +
+                profile.id +
+                "/" +
+                profile.banner +
+                ".png"
+              : null,
             nitro: profile.premium_type,
             locale: profile.locale,
           };
