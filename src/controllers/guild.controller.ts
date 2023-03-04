@@ -13,7 +13,7 @@ export function getGuild(req: Request, res: Response) {
 }
 
 export function createGuild(req: Request, res: Response) {
-  LogCreate(`Creating guild '${req.body.guildId}'`);
+  LogCreate(`Creating guild '${req.body.id}'`);
   Guild.create({ ...req.body })
     .then(() => res.status(201).json({ message: "Guild created!" }))
     .catch((error: Error) => res.status(400).json({ error: error.message }));
