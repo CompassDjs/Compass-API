@@ -20,6 +20,9 @@ export default (req: any, res: Response, next: NextFunction) => {
           req.tokens = {
             accessToken: user.accessToken ? user.accessToken : null,
             userId: user.userId,
+            guilds: session.data
+              ? JSON.parse(session.data).passport.user.guilds
+              : null,
           };
           next();
         })

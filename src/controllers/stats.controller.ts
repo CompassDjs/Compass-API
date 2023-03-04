@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { LogUpdate, LogGet, LogCreate } from "@utils/logger";
 import { FindGameByName, GetGameCover } from "@utils/igdb";
-import { QueryTypes } from "sequelize";
 import db from "@utils/db";
 import IUser from "@interfaces/IUser";
 import IGuild from "@interfaces/IGuild";
@@ -20,86 +19,28 @@ const UsersGuilds = db.users_guilds;
 const UsersGames = db.users_games;
 const UsersMessages = db.users_messages;
 
-export function getGuildUserStats(req: any, res: Response) {
-  LogGet(`Stats for user guild ${req.params.guildId}`);
+export async function getGuildUserStats(req: any, res: Response) {
+  LogGet(`Stats for user guild '${req.params.guildId}'`);
   if (!req.tokens.userId)
     return res.status(400).json({ error: "Session expired" });
 
   const userId = req.tokens.userId;
-  Guild.findOne({
-    where: { id: req.params.guildId },
-  })
-    .then(async (data: any) => {
-      const guild = data.dataValues as IGuild;
+  const guilds = req.tokens.guilds;
+  if (!IsUserInGuild(guilds, req.params.guildId))
+    return res.status(401).json({ error: "Unauthorized" });
 
-      let totalMsg, totalVoice, totalGames;
-      try {
-        totalMsg = await db.sequelize.query(
-          `SELECT COUNT(*) AS totalMessages
-            FROM messages m
-            INNER JOIN channels c ON m.channelChannelId = c.channelId
-            INNER JOIN guilds g ON c.guildId = g.id
-            INNER JOIN users_messages um ON m.messageId = um.messageMessageId
-            INNER JOIN users u ON um.userUserId = u.userId
-            WHERE g.id = :guildId AND u.userId = :userId;
-            `,
-          {
-            replacements: {
-              guildId: guild.id,
-              userId: userId,
-            },
-          }
-        );
-
-        totalVoice = await db.sequelize.query(
-          `SELECT SUM(uc.voiceTime) AS totalVoiceTime
-            FROM users_channels uc
-            INNER JOIN channels c ON uc.channelChannelId = c.channelId
-            INNER JOIN guilds g ON c.guildId = g.id
-            INNER JOIN users u ON uc.userUserId = u.userId
-            WHERE g.id = :guildId AND u.userId = :userId;
-            `,
-          {
-            replacements: {
-              guildId: guild.id,
-              userId: userId,
-            },
-          }
-        );
-
-        totalGames = await db.sequelize.query(
-          `SELECT SUM(ug.gameTime) AS totalGameTime
-            FROM users_games ug
-            INNER JOIN games g ON ug.gameGameName = g.gameName
-            INNER JOIN users u ON ug.userUserId = u.userId
-            INNER JOIN users_guilds ugld ON ugld.userUserId = u.userId
-            INNER JOIN guilds gld ON ugld.guildId = gld.id
-            WHERE gld.id = :guildId AND u.userId = :userId;
-            `,
-          {
-            replacements: {
-              guildId: guild.id,
-              userId: userId,
-            },
-          }
-        );
-      } catch (error) {
-        return res.status(404).json({ error });
-      }
-
-      const totals = {
-        totalMsg: totalMsg[0][0].totalMessages,
-        totalVoice: totalVoice[0][0].totalVoiceTime,
-        totalGames: totalGames[0][0].totalGameTime,
-      };
-      res.status(200).json({ totals });
-    })
-    .catch((error: Error) => res.status(404).json({ error }));
+  const { error, totals } = await UserGuildStats(req.params.guildId, userId);
+  if (error) return res.status(400).json({ error });
+  return res.status(200).json({ totals });
 }
 
 export function getGuildStats(req: any, res: Response) {
   LogGet(`Stats for guild '${req.params.guildId}'`);
-  const accessToken = req.tokens.accessToken;
+
+  const guilds = req.tokens.guilds;
+  if (!IsUserInGuild(guilds, req.params.guildId))
+    return res.status(401).json({ error: "Unauthorized" });
+
   Guild.findOne({
     where: { id: req.params.guildId },
   })
@@ -463,4 +404,108 @@ export function newMessage(req: Request, res: Response) {
         );
     })
     .catch((error: Error) => res.status(400).json({ error: error.message }));
+}
+
+export function getBotUserStats(req: Request, res: Response) {
+  LogGet(`Stats for user '${req.params.userId}'`);
+  User.findOne({
+    where: { userId: req.params.userId },
+  })
+    .then(async (data: any) => {
+      const user: IUser = data.dataValues;
+
+      const { error, totals } = await UserGuildStats(
+        req.params.guildId,
+        user.userId
+      );
+
+      if (error) return res.status(404).json({ error });
+
+      res.status(200).json({ totals });
+    })
+    .catch((error: Error) => res.status(404).json({ error }));
+}
+
+async function UserGuildStats(guildId: string, userId: string) {
+  try {
+    const data = await Guild.findOne({
+      where: { id: guildId },
+    });
+    const guild = data.dataValues as IGuild;
+
+    const totalMsg = await db.sequelize.query(
+      `SELECT COUNT(*) AS totalMessages
+          FROM messages m
+          INNER JOIN channels c ON m.channelChannelId = c.channelId
+          INNER JOIN guilds g ON c.guildId = g.id
+          INNER JOIN users_messages um ON m.messageId = um.messageMessageId
+          INNER JOIN users u ON um.userUserId = u.userId
+          WHERE g.id = :guildId AND u.userId = :userId;
+          `,
+      {
+        replacements: {
+          guildId: guild.id,
+          userId: userId,
+        },
+      }
+    );
+
+    const totalVoice = await db.sequelize.query(
+      `SELECT CAST(SUM(uc.voiceTime) AS UNSIGNED INTEGER) AS totalVoiceTime
+          FROM users_channels uc
+          INNER JOIN channels c ON uc.channelChannelId = c.channelId
+          INNER JOIN guilds g ON c.guildId = g.id
+          INNER JOIN users u ON uc.userUserId = u.userId
+          WHERE g.id = :guildId AND u.userId = :userId;
+          `,
+      {
+        replacements: {
+          guildId: guild.id,
+          userId: userId,
+        },
+      }
+    );
+
+    const totalGames = await db.sequelize.query(
+      `SELECT CAST(SUM(ug.gameTime) AS UNSIGNED INTEGER) AS totalGameTime
+          FROM users_games ug
+          INNER JOIN games g ON ug.gameGameName = g.gameName
+          INNER JOIN users u ON ug.userUserId = u.userId
+          INNER JOIN users_guilds ugld ON ugld.userUserId = u.userId
+          INNER JOIN guilds gld ON ugld.guildId = gld.id
+          WHERE gld.id = :guildId AND u.userId = :userId;
+          `,
+      {
+        replacements: {
+          guildId: guild.id,
+          userId: userId,
+        },
+      }
+    );
+
+    const totals = {
+      totalMsg: totalMsg[0][0].totalMessages || 0,
+      totalVoice: totalVoice[0][0].totalVoiceTime || 0,
+      totalGames: totalGames[0][0].totalGameTime || 0,
+    };
+
+    return {
+      error: null,
+      totals,
+    };
+  } catch (error) {
+    return {
+      error,
+      totals: null,
+    };
+  }
+}
+
+function IsUserInGuild(guilds: { id: string }[], guildId: string) {
+  for (const userGuild of guilds) {
+    if (userGuild.id === guildId) {
+      return true;
+    }
+  }
+  return false;
 }
