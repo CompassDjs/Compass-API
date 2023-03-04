@@ -59,10 +59,3 @@ export function initUser(user: IUser, flags: number) {
     })
     .catch((error: Error) => console.log(error.message));
 }
-
-export function getUsers(req: Request, res: Response) {
-  LogGet(`Users`);
-  User.findAll()
-    .then((users: IUser[]) => res.status(200).json(users))
-    .catch((error: Error) => res.status(404).json({ error }));
-}

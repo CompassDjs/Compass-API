@@ -7,8 +7,8 @@ import {
   deleteGuild,
 } from "@controllers/guild.controller";
 
-router.get("/i/:guildId", getGuild);
+router.get("/i/:id", getGuild);
 router.post("/add", createGuild);
-router.delete("/i/:guildId", deleteGuild);
+router.delete("/i/:id", deleteGuild);
 
 export default router;
